@@ -20,13 +20,13 @@ const PORT = process.env.PORT || 5555;
 const DB_URI = process.env.ATLAS_URI;
 
 // database
-mongoose.connect(DB_URI, {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
-mongoose.set('useFindAndModify', false);
+// mongoose.connect(DB_URI, {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
+// mongoose.set('useFindAndModify', false);
 
-const connection = mongoose.connection;
-connection.once('open', () => {
-  console.log('MongoDB database connection established successfully.');
-})
+// const connection = mongoose.connection;
+// connection.once('open', () => {
+//   console.log('MongoDB database connection established successfully.');
+// })
 
 
 // routes
