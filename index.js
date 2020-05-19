@@ -31,7 +31,10 @@ const DB_URI = process.env.ATLAS_URI;
 
 
 // routes
-app.get('/', (req, res) => res.send('Welcome!'))
+app.get('/test', (req, res) => res.send('Welcome!'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname + '/public/index.html'));
+})
 
 // models
 const Lobby = require('./models/lobby.model');
