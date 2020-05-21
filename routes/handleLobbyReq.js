@@ -1,6 +1,6 @@
 const constants = require('../constants');
 const util = require('../helpers/util');
-const { MAX_PLAYERS_PER_LOBBY, DELAY_FOR_COORDS } = constants;
+const { MAX_PLAYERS_PER_LOBBY, DELAY_FOR_COORDS, LOBBY_DECAY, MAX_LOBBIES } = constants;
 const { generateUniquePID, generateQuadrant } = util;
 
 
@@ -67,8 +67,14 @@ module.exports = function(games, client, db, io, app) {
   /** Handle create lobby **/
   app.post('/createLobby', (req, res) => {
     const { genLobbyID, myUsername } = req.body;
+    // if(Object.keys(games).length === MAX_LOBBIES) {
+    //   /** Attemp to stop DDoS attack but not sure if this is the best way **/
+    //   return res.status(500).send({err:'Too many active lobbies open at the moment. Please try again in a minute.'});
+    // }
+
     if(games.hasOwnProperty(genLobbyID)) {
       console.log('That lobby exists already!');
+      /**TODO: ask host to gen lobbyID again. I'm making the client gen the lobbyID so for future stretch, the user can set their own lobbyID or lobby name etc **/
     }
   
     games[genLobbyID] = {
@@ -83,6 +89,16 @@ module.exports = function(games, client, db, io, app) {
     console.log('Lobby created. Sending data:', data);
     res.json(data);
   });
+
+  /** Handle cancel lobby **/
+  app.post('/cancelLobby', (req, res) => {
+    const { lobbyID, nextView } = req.body;
+    delete games[lobbyID];
+    console.log('Host trying to cancel game...')
+
+    res.send('ok');
+    io.in(lobbyID).emit('cancelGame', nextView);
+  })
   
   
   /** Handle join lobby **/

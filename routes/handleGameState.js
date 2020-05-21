@@ -21,6 +21,11 @@ module.exports = function(games, client, db, io) {
     client.to(lobbyID).emit('cancelGame', nextView);
   });
 
+  client.on('disconnectClient', lobbyID => {
+    client.leave(lobbyID);
+    console.log('Disconnected from lobby:', lobbyID);
+  })
+
 
   client.on('startGame', data => {
     const { lobbyID, nextView } = data;
@@ -49,7 +54,7 @@ module.exports = function(games, client, db, io) {
       setTimeout(() => {
         console.log('Game finished.');
         clearInterval(interval);
-        io.in(lobbyID).emit('roundFinished')
+        io.in(lobbyID).emit('roundFinished');
       }, ROUND_TIME);
 
     }, VIEW_TIME);
