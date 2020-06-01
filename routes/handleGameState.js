@@ -8,7 +8,7 @@ module.exports = function(games, client, db, io) {
 
   client.on('joinLobby', data => {
     const { lobbyID, myUsername } = data;
-    console.log(`Attempting to join lobby ${lobbyID}...`);
+    //
     client.join(lobbyID);
     io.in(lobbyID).emit('newUserJoined', myUsername);
   });
@@ -23,16 +23,14 @@ module.exports = function(games, client, db, io) {
 
   client.on('disconnectClient', lobbyID => {
     client.leave(lobbyID);
-    console.log('Disconnected from lobby:', lobbyID);
+    //
   })
 
 
-  client.on('startGame', data => {
+  client.on('startGame', async data => {
     const { lobbyID, nextView } = data;
-    io.in(lobbyID).emit('changeView', nextView);
 
-    let opacity = 1;
-    let interval;
+    io.in(lobbyID).emit('changeView', nextView);
 
     /** Timeout for InstructionsView **/
     setTimeout(() => {
@@ -52,7 +50,7 @@ module.exports = function(games, client, db, io) {
 
       /** Timeout for DrawGameView **/
       setTimeout(() => {
-        console.log('Game finished.');
+        //
         clearInterval(interval);
         io.in(lobbyID).emit('roundFinished');
       }, ROUND_TIME);

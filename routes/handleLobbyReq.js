@@ -1,7 +1,7 @@
 const constants = require('../constants');
 const util = require('../helpers/util');
 const { MAX_PLAYERS_PER_LOBBY, DELAY_FOR_COORDS, LOBBY_DECAY, MAX_LOBBIES } = constants;
-const { generateUniquePID, generateQuadrant } = util;
+const { generateUniquePID, generateQuadrant, getIMG, randomNumAllInclusive } = util;
 
 
 
@@ -12,7 +12,7 @@ module.exports = function(games, client, db, io, app) {
   app.post('/finalCoords', (req, res) => {
     const { coordinates, lobbyID, myQuadrant, PLAYERS_IN_ROOM } = req.body;
     
-    // console.log(`Recieved coordinates from lobby ${lobbyID}:`, coordinates);
+    // //
   
     /** Populate quadrants **/
     games[lobbyID].coordinates[myQuadrant] = coordinates;
@@ -25,16 +25,16 @@ module.exports = function(games, client, db, io, app) {
     if(updatedCoords.length === PLAYERS_IN_ROOM) {
       const finalCoordinates = games[lobbyID].coordinates;
   
-      console.log(`Successfully received coordinates from all ${PLAYERS_IN_ROOM} players`);
+      //
 
       io.in(lobbyID).emit('finalCoordinates', finalCoordinates);
       res.send(`You're last to send data.`)
       
-      console.log(games);
-      console.log('Deleting game from memory.');
+      //
+      //
 
       delete games[lobbyID];
-      return console.log('Deleted =>', games)
+      return //
     } else {
       res.send('Successfully sent your final coordinates.');
     }
@@ -48,7 +48,7 @@ module.exports = function(games, client, db, io, app) {
         if(updatedCoords.length !== PLAYERS_IN_ROOM) {
    
           const errMsg = `A player disconnected during the game.`
-          console.log(errMsg);
+          //
   
           const finalCoordinates = games[lobbyID].coordinates;
   
@@ -57,7 +57,7 @@ module.exports = function(games, client, db, io, app) {
 
     
           delete games[lobbyID];
-          return console.log('Deleted =>', games);
+          return //
         }
       }
     }, DELAY_FOR_COORDS);
@@ -73,7 +73,7 @@ module.exports = function(games, client, db, io, app) {
     // }
 
     if(games.hasOwnProperty(genLobbyID)) {
-      console.log('That lobby exists already!');
+      //
       /**TODO: ask host to gen lobbyID again. I'm making the client gen the lobbyID so for future stretch, the user can set their own lobbyID or lobby name etc **/
     }
   
@@ -86,7 +86,7 @@ module.exports = function(games, client, db, io, app) {
     const data = {
       myLobbyObj: games[genLobbyID],
     }
-    console.log('Lobby created. Sending data:', data);
+    //
     res.json(data);
   });
 
@@ -94,7 +94,7 @@ module.exports = function(games, client, db, io, app) {
   app.post('/cancelLobby', (req, res) => {
     const { lobbyID, nextView } = req.body;
     delete games[lobbyID];
-    console.log('Host trying to cancel game...')
+    //
 
     res.send('ok');
     io.in(lobbyID).emit('cancelGame', nextView);
@@ -105,22 +105,22 @@ module.exports = function(games, client, db, io, app) {
   app.post('/joinLobby', (req, res) => {
     const { lobbyID, myUsername } = req.body;
   
-    console.log(`${myUsername} attempting to join lobby: ${lobbyID}`);
+    //
   
     if(!games[lobbyID]) {
-      console.log(`That lobby doesn't exist!`);
+      //
       return res.status(500).send({err: 'Lobby doesn`t exist!'});
     }
   
     const currentUserNum = Object.keys(games[lobbyID].players).length;
   
     if(currentUserNum === MAX_PLAYERS_PER_LOBBY) {
-      console.log('That lobby is full!');
+      //
       return res.status(500).send({err: 'Lobby is full!'});
     }
 
     /** Pass all filters => join lobby */
-    console.log('Added to socket room:', lobbyID);
+    //
     client.join(lobbyID);
   
     const myLobbyObj = games[lobbyID];
@@ -136,7 +136,7 @@ module.exports = function(games, client, db, io, app) {
     /** Add quadrant to coordinates obj **/
     myLobbyObj.coordinates[myQuadrant] = [];
     
-    console.log(`${myUsername} joined lobby ${lobbyID}. This lobby:`, myLobbyObj);
+    //
   
     const data = { myLobbyObj, myPlayerID };
     res.json(data);
@@ -146,7 +146,7 @@ module.exports = function(games, client, db, io, app) {
   app.post('/reqLobbyInfo', (req, res) => {
     const { lobbyID } = req.body;
   
-    console.log('User request for lobby obj:', lobbyID);
+    //
     const data = { myLobbyObj: games[lobbyID] }
     res.json(data);
   })
@@ -170,9 +170,21 @@ module.exports = function(games, client, db, io, app) {
       io.in(lobbyID).emit('userLeft', data);
       res.send({nextView: 'LandingView'});
     } catch(err) {
-      console.log(`That player doesn't exist in this lobby.`);
+      //
       res.status(500).send({err: 'Something went wrong.'});
     }
+  })
+
+
+  app.post('/getIMG', async (req, res) => {
+    const { lobbyID } = req.body;
+
+    // Make a request to pixabay for an array of images and respond with 1 random image
+    const imagesArr = await getIMG();
+    const gameIMG = imagesArr[randomNumAllInclusive(0, imagesArr.length)];
+
+    io.in(lobbyID).emit('gameIMG', gameIMG);
+    res.status(200).send('OK');
   })
 
 };
